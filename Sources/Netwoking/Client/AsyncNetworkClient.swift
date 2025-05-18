@@ -19,50 +19,40 @@ public class AsyncNetworkClient: NetworkClient {
     }
     
     public func send<R: NetworkRequest>(_ request: R) async throws -> R.Response {
-        
-        logger.logRequest(request.urlRequest)
-        
-        let requestStartedTime = Date()
-        
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request.urlRequest)
+            logger.logRequest(request.urlRequest)
+            let requestStartedTime = Date()
             
-            let requestDuration = Date().timeIntervalSince(requestStartedTime)
-            
-            logger.logResponse(
-                response,
-                data: data,
-                error: nil,
-                duration: requestDuration
-            )
-            
-            try validate(response: response, data: data)
-            
-            return try JSONDecoder().decode(R.Response.self, from: data)
-            
-        } catch let decodingError as DecodingError {
-            
-            let requestDuration = Date().timeIntervalSince(requestStartedTime)
-            
-            logger.logResponse(
-                nil,
-                data: nil,
-                error: decodingError,
-                duration: requestDuration
-            )
-            throw NetworkError.decodingError(decodingError)
-        } catch {
-            let requestDuration = Date().timeIntervalSince(requestStartedTime)
-            
-            logger.logResponse(
-                nil,
-                data: nil,
-                error: error,
-                duration: requestDuration
-            )
-            throw NetworkError.transportError(error)
+            do {
+                let (data, response) = try await URLSession.shared.data(for: request.urlRequest)
+                let requestDuration = Date().timeIntervalSince(requestStartedTime)
+                
+                try validate(response: response, data: data)
+                
+                logger.logResponse(
+                    response,
+                    data: data,
+                    error: nil,
+                    duration: requestDuration
+                )
+                
+                return try JSONDecoder().decode(R.Response.self, from: data)
+                
+            } catch let decodingError as DecodingError {
+                let duration = Date().timeIntervalSince(requestStartedTime)
+                logger.logResponse(nil, data: nil, error: decodingError, duration: duration)
+                throw NetworkError.decodingError(decodingError)
+                
+            } catch let networkError as NetworkError {
+                let duration = Date().timeIntervalSince(requestStartedTime)
+                logger.logResponse(nil, data: nil, error: networkError, duration: duration)
+                throw networkError
+                
+            } catch {
+                let duration = Date().timeIntervalSince(requestStartedTime)
+                logger.logResponse(nil, data: nil, error: error, duration: duration)
+                throw NetworkError.transportError(error)
+            }
         }
-    }
 
     private func validate(response: URLResponse, data: Data?) throws {
         guard let httpResponse = response as? HTTPURLResponse else {
