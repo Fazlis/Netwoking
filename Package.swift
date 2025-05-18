@@ -15,10 +15,6 @@ let package = Package(
         .library(
             name: "Interfaces",
             targets: ["Interfaces"]
-        ),
-        .library(
-            name: "Client",
-            targets: ["Client"]
         )
     ],
     targets: [
@@ -26,10 +22,6 @@ let package = Package(
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
             name: "Netwoking",
-            dependencies: ["Interfaces"]
-        ),
-        .target(
-            name: "Client",
             dependencies: ["Interfaces"]
         ),
         .target(
