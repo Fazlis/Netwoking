@@ -73,4 +73,23 @@ public class AsyncNetworkClient: NetworkClient {
             throw NetworkError.httpError(httpResponse.statusCode, data)
         }
     }
+    
+    public func loadMockResponse<Response: Decodable>(fileName: String) async throws -> Response {
+        
+        guard let path = Bundle.main.path(forResource: fileName, ofType: "json") else {
+            print("Файл \(fileName).json не найден")
+            throw NSError(domain: "MockFileError", code: 404, userInfo: [NSLocalizedDescriptionKey: "Файл \(fileName).json не найден"])
+        }
+        
+        do {
+            let fileURL = URL(fileURLWithPath: path)
+            let data = try Data(contentsOf: fileURL)
+            let decodedResponse = try JSONDecoder().decode(Response.self, from: data)
+            print("✅ Моковый ответ из \(fileName).json успешно загружен")
+            return decodedResponse
+        } catch {
+            print("Ошибка при чтении мокового файла \(fileName): \(error)")
+            throw error
+        }
+    }
 }
