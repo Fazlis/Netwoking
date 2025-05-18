@@ -8,4 +8,5 @@
 
 public protocol NetworkClient {
     func send<R: NetworkRequest>(_ request: R) async throws -> R.Response
+    func loadMockResponse<Response: Decodable>(fileName: String) async throws -> Response
 }
