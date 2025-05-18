@@ -19,3 +19,9 @@ public protocol Endpoint {
     var queryItems: [URLQueryItem]? { get }
     var body: Data? { get }
 }
+
+public extension Endpoint {
+    var headers: [String: String]? { return nil }
+    var queryItems: [URLQueryItem]? { return nil }
+    var body: Data? { return nil }
+}
