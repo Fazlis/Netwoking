@@ -26,7 +26,15 @@ public class AsyncNetworkClient: NetworkClient {
                 let (data, response) = try await URLSession.shared.data(for: request.urlRequest)
                 let requestDuration = Date().timeIntervalSince(requestStartedTime)
                 
-                try validate(response: response, data: data)
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    logger.logResponse(response, data: data, error: nil, duration: requestDuration)
+                    throw NetworkError.unknown
+                }
+                
+                guard (200..<300).contains(httpResponse.statusCode) else {
+                    logger.logResponse(response, data: data, error: nil, duration: requestDuration)
+                    throw NetworkError.httpError(httpResponse.statusCode, data)
+                }
                 
                 logger.logResponse(
                     response,
